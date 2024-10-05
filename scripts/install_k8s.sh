@@ -52,7 +52,7 @@ ansible-galaxy collection install kubernetes.core
 set -e
 trap 'echo "An error occurred. Cleaning up..."; cleanup_function' ERR
 
-pushd ./ansible || exit
+pushd ../ansible || exit
 
 cleanup_function() {
   rm -f \

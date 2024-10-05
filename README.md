@@ -199,6 +199,8 @@ variable "unifi_password" {
 }
 ```
 For the Proxmox user and api token, see [these instructions](https://registry.terraform.io/providers/bpg/proxmox/latest/docs#api-token-authentication)
+* You'll need to add the `Datastore.AllocateTemplate` and `Datastore.Allocate` permissions as well.
+* Follow the instructions that allow the new user to SSH into the Proxmox Host. Ensure you can run `ssh tofu@<proxmox_host> sudo pvesm apiinfo` and see info without having to enter a password.
 
 For the Unifi password, you'll want to create a new service account user for tofu.
 * In the Unifi Controller, go to Settings -> Admins & Users.

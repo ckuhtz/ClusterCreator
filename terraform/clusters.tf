@@ -10,8 +10,12 @@ variable "clusters" {
     cluster_name                     : string # name to be used in kubeconfig, cluster mesh, network name, k8s_vm_template pool. Must match the cluster name key.
     cluster_id                       : number # acts as the vm_id prefix. Also used for cluster mesh. This plus the vm start ip should always be over 100 because of how proxmox likes its vmids. But you can use 0 if the vm start id fits these requirements.
     kubeconfig_file_name             : string # name of the local kubeconfig file to be created. Assumed this will be in $HOME/.kube/
+    talosconfig_file_name            : string # name of the local talosconfig file to be created. Assumed this will be in $HOME/.talos/
     start_on_proxmox_boot            : bool   # whether or not to start the cluster's vms on proxmox boot
     max_pods_per_node                : number # max pods per node. This should be a function of the quantity of IPs in you pod_cidr and number of nodes.
+    iso_datastore                    : string # name of the proxmox datastore to use for the iso file
+    region                           : string # arbitrary name for the proxmox region. Will only be used for a node label.
+    zone                             : string # arbitrary name for the proxmox availability zone. Will only be used for a node label.
     ssh                              : object({
       ssh_user                       : string # username for the remote server
       ssh_home                       : string # path to your home directory on the remote server
@@ -19,6 +23,7 @@ variable "clusters" {
     })
     networking                       : object({
       bridge                         : string # name of the proxmox bridge to use for VM's network interface
+      tailscale_domain               : string # domain name for tailscale. This is the domain name suffix for the tailscale machines.
       dns_search_domain              : string # search domain for DNS resolution
       assign_vlan                    : bool   # whether or not to assign a vlan to the network interfaces of the VMs.
       create_vlan                    : bool   # whether or not to create an IPv4 vlan in Unifi.
@@ -40,16 +45,19 @@ variable "clusters" {
         dns1                         : string # primary dns server for vm hosts
         dns2                         : string # secondary dns server for vm hosts
       })
-      kube_vip                       : object({
-        kube_vip_version             : string # kube-vip version to use. needs to be their ghcr.io docker image version
+      vip                       : object({
         vip_interface                : string # interface that faces the local lan. Usually eth0 for this project.
-        vip                          : string # should be IPv4 and not be in one if your load balancer ip cidr ranges
+        ip                           : string # should be IPv4 and not be in one if your load balancer ip cidr ranges
         vip_hostname                 : string # hostname to use when querying the api server's vip load balancer (kube-vip)
         use_ipv6                     : bool   # whether or not to use an IPv6 vip. You must also set the VIP to an IPv6 address. This can be true without enabling dual_stack.
       })
       cilium                         : object({
         cilium_version               : string # release version for cilium
       })
+    })
+    talos                            : object({
+      talos_version                  : string # version of talos to use.
+      k8s_version                    : string # version of kubernetes to use. Must be a version that the talos version supports.
     })
     local_path_provisioner           : object({
       local_path_provisioner_version : string # version for Rancher's local path provisioner
@@ -141,8 +149,12 @@ variable "clusters" {
       cluster_name                     = "alpha"
       cluster_id                       = 1
       kubeconfig_file_name             = "alpha.yml"
+      talosconfig_file_name            = "alpha.yml"
       start_on_proxmox_boot            = false
       max_pods_per_node                = 512
+      iso_datastore                    = "pve-file"
+      region                           = "us-west"
+      zone                             = "us-west-1"
       ssh = {
         ssh_user                       = "line6"
         ssh_home                       = "/home/line6"
@@ -150,7 +162,8 @@ variable "clusters" {
       }
       networking                       = {
         bridge                         = "vmbr0"
-        dns_search_domain              = "lan"
+        tailscale_domain               = "tailcaf83.ts.net"
+        dns_search_domain              = "christensencloud.us"
         vlan_name                      = "ALPHA"
         vlan_id                        = 100
         assign_vlan                    = false
@@ -171,16 +184,19 @@ variable "clusters" {
           dns1                         = "2607:fa18::1" # cloudflare ipv6 dns
           dns2                         = "2607:fa18::2"
         }
-        kube_vip = {
-          kube_vip_version             = "0.8.3"
-          vip                          = "10.0.1.100"
+        vip = {
+          ip                           = "10.0.1.100"
           vip_hostname                 = "alpha-api-server"
           vip_interface                = "eth0"
           use_ipv6                     = false
         }
         cilium = {
-          cilium_version               = "1.16.1"
+          cilium_version               = "1.16.2"
         }
+      }
+      talos = {
+        talos_version                  = "v1.8.0"
+        k8s_version                    = "1.31.1"
       }
       local_path_provisioner = {
         local_path_provisioner_version = "0.0.29"
@@ -261,8 +277,12 @@ variable "clusters" {
       cluster_name                     = "beta"
       cluster_id                       = 2
       kubeconfig_file_name             = "beta.yml"
+      talosconfig_file_name            = "beta.yml"
       start_on_proxmox_boot            = false
       max_pods_per_node                = 512
+      iso_datastore                    = "pve-file"
+      region                           = "us-west"
+      zone                             = "us-west-1"
       ssh = {
         ssh_user                       = "line6"
         ssh_home                       = "/home/line6"
@@ -270,7 +290,8 @@ variable "clusters" {
       }
       networking                       = {
         bridge                         = "vmbr0"
-        dns_search_domain              = "lan"
+        tailscale_domain               = "tailcaf83.ts.net"
+        dns_search_domain              = "christensencloud.us"
         assign_vlan                    = true
         create_vlan                    = true
         vlan_name                      = "BETA"
@@ -291,16 +312,19 @@ variable "clusters" {
           dns1                         = "2607:fa18::1" # cloudflare ipv6 dns
           dns2                         = "2607:fa18::2"
         }
-        kube_vip = {
-          kube_vip_version             = "0.8.3"
-          vip                          = "10.0.2.100"
+        vip = {
+          ip                           = "10.0.2.100"
           vip_hostname                 = "beta-api-server"
           vip_interface                = "eth0"
           use_ipv6                     = false
         }
         cilium = {
-          cilium_version                 = "1.16.1"
+          cilium_version                 = "1.16.2"
         }
+      }
+      talos = {
+        talos_version                  = "v1.8.0"
+        k8s_version                    = "1.31.1"
       }
       local_path_provisioner = {
         local_path_provisioner_version = "0.0.29"
@@ -310,7 +334,7 @@ variable "clusters" {
       }
       node_classes = {
         apiserver = {
-          count      = 1
+          count      = 3
           cores      = 2
           sockets    = 2
           memory     = 4096
@@ -334,7 +358,7 @@ variable "clusters" {
           start_ip   = 120
         }
         storage = {
-          count      = 1
+          count      = 0
           cores      = 1
           sockets    = 2
           memory     = 2048
@@ -348,7 +372,7 @@ variable "clusters" {
           taints = {}
         }
         database = {
-          count      = 1
+          count      = 2
           cores      = 2
           sockets    = 2
           memory     = 8192
@@ -362,7 +386,7 @@ variable "clusters" {
           taints = {}
         }
         general = {
-          count      = 1
+          count      = 2
           cores      = 4
           sockets    = 2
           memory     = 4096
@@ -381,8 +405,12 @@ variable "clusters" {
       cluster_name                     = "gamma"
       cluster_id                       = 3
       kubeconfig_file_name             = "gamma.yml"
+      talosconfig_file_name            = "gamma.yml"
       start_on_proxmox_boot            = false
       max_pods_per_node                = 512
+      iso_datastore                    = "pve-file"
+      region                           = "us-west"
+      zone                             = "us-west-1"
       ssh                              = {
         ssh_user                       = "line6"
         ssh_home                       = "/home/line6"
@@ -390,7 +418,8 @@ variable "clusters" {
       }
       networking                       = {
         bridge                         = "vmbr0"
-        dns_search_domain              = "lan"
+        tailscale_domain               = "tailcaf83.ts.net"
+        dns_search_domain              = "christensencloud.us"
         assign_vlan                    = true
         create_vlan                    = true
         vlan_name                      = "GAMMA"
@@ -411,16 +440,19 @@ variable "clusters" {
           dns1                         = "2607:fa18::1" # cloudflare ipv6 dns
           dns2                         = "2607:fa18::2"
         }
-        kube_vip = {
-          kube_vip_version             = "0.8.3"
-          vip                          = "10.0.3.100"
+        vip = {
+          ip                           = "10.0.3.100"
           vip_hostname                 = "gamma-api-server"
           vip_interface                = "eth0"
           use_ipv6                     = false
         }
         cilium = {
-          cilium_version               = "1.16.1"
+          cilium_version               = "1.16.2"
         }
+      }
+      talos = {
+        talos_version                  = "v1.8.0"
+        k8s_version                    = "1.31.1"
       }
       local_path_provisioner = {
         local_path_provisioner_version = "0.0.29"

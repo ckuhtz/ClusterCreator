@@ -8,6 +8,7 @@ GREEN='\033[32m'
 RED='\033[0;31m'
 ENDCOLOR='\033[0m'
 
+# FIXME: ensure these are sourced no matter which dir you're in
 set -a # automatically export all variables
 source .env
 source k8s.env
