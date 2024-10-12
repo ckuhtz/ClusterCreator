@@ -1,3 +1,19 @@
+locals {
+  ipv4_interface_list = join(",", flatten([
+    for node in proxmox_virtual_environment_vm.node : [
+      for ip in flatten([node.ipv4_addresses]) : ip
+      if ip != "127.0.0.1"                         # Exclude loopback address
+    ]
+  ]))
+
+  ipv6_interface_list = join(",", flatten([
+    for node in proxmox_virtual_environment_vm.node : [
+      for ip in flatten([node.ipv6_addresses]) : ip
+      if ip != "::1" && !can(regex("^fe80:", ip))  # Exclude loopback and local-link addresses
+    ]
+  ]))
+}
+
 resource "proxmox_virtual_environment_firewall_options" "node" {
   depends_on = [ proxmox_virtual_environment_vm.node ]
   for_each = { for node in local.nodes : "${node.cluster_name}-${node.node_class}-${node.index}" => node }
@@ -283,6 +299,16 @@ resource "proxmox_virtual_environment_cluster_firewall_security_group" "k8s_api"
     proto   = "tcp"
     log     = "nolog"
   }
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    comment = "Allow K8s API from all K8s Nodes QEMU-found IPs"
+    source  = local.cluster_config.networking.kube_vip.use_ipv6 ? local.ipv6_interface_list : local.ipv4_interface_list
+    dest    = "+${proxmox_virtual_environment_firewall_ipset.kube_vip[0].name}"
+    dport   = "6443"
+    proto   = "tcp"
+    log     = "nolog"
+  }
 }
 
 # allow admin ssh
@@ -454,6 +480,103 @@ resource "proxmox_virtual_environment_cluster_firewall_security_group" "kubelet_
   }
 }
 
+# allow metrics-server port
+resource "proxmox_virtual_environment_cluster_firewall_security_group" "metrics_server" {
+  count = local.cluster_config.networking.use_pve_firewall ? 1 : 0
+
+  name    = "k8s-${local.cluster_config.cluster_name}-metrics"
+  comment = "Metrics-Server in ${local.cluster_config.cluster_name} cluster"
+
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    comment = "Allow Metrics Server Port IPv4"
+    source  = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv4[0].name}"
+    dest    = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv4[0].name}"
+    dport   = "10250"
+    proto   = "tcp"
+    log     = "nolog"
+  }
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    comment = "Allow Metrics Server Port IPv6"
+    source  = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv6[0].name}"
+    dest    = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv6[0].name}"
+    dport   = "10250"
+    proto   = "tcp"
+    log     = "nolog"
+  }
+}
+
+# allow cilium ports
+resource "proxmox_virtual_environment_cluster_firewall_security_group" "cilium" {
+  count = local.cluster_config.networking.use_pve_firewall ? 1 : 0
+
+  name    = "k8s-${local.cluster_config.cluster_name}-cilium"
+  comment = "Cilium in ${local.cluster_config.cluster_name} cluster"
+
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    comment = "Allow Cilium TCP Ports IPv4 Part 1"
+    source  = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv4[0].name}"
+    dest    = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv4[0].name}"
+    dport   = "4240,4244,4245,4250,4251,6060,6061,6062,9878"
+    proto   = "tcp"
+    log     = "nolog"
+  }
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    comment = "Allow Cilium TCP Ports IPv6 Part 1"
+    source  = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv6[0].name}"
+    dest    = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv6[0].name}"
+    dport   = "4240,4244,4245,4250,4251,6060,6061,6062,9878"
+    proto   = "tcp"
+    log     = "nolog"
+  }
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    comment = "Allow Cilium TCP Ports IPv4 Part 2"
+    source  = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv4[0].name}"
+    dest    = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv4[0].name}"
+    dport   = "9879,9890,9891,9893,9901,9962,9963,9964"
+    proto   = "tcp"
+    log     = "nolog"
+  }
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    comment = "Allow Cilium TCP Ports IPv6 Part 2"
+    source  = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv6[0].name}"
+    dest    = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv6[0].name}"
+    dport   = "9879,9890,9891,9893,9901,9962,9963,9964"
+    proto   = "tcp"
+    log     = "nolog"
+  }
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    comment = "Allow Cilium UDP Ports IPv4"
+    source  = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv4[0].name}"
+    dest    = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv4[0].name}"
+    dport   = "51871,8472,6081,8472"
+    proto   = "udp"
+    log     = "nolog"
+  }
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    comment = "Allow Cilium UDP Ports IPv6"
+    source  = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv6[0].name}"
+    dest    = "+${proxmox_virtual_environment_firewall_ipset.all_nodes_ipv6[0].name}"
+    dport   = "51871,8472,6081,8472"
+    proto   = "udp"
+    log     = "nolog"
+  }
+}
 
 # allow NodePort services
 resource "proxmox_virtual_environment_cluster_firewall_security_group" "nodeport" {
@@ -494,6 +617,8 @@ resource "proxmox_virtual_environment_firewall_rules" "main" {
     proxmox_virtual_environment_cluster_firewall_security_group.etcd,
     proxmox_virtual_environment_cluster_firewall_security_group.kubelet_api_apiserver,
     proxmox_virtual_environment_cluster_firewall_security_group.kubelet_api_worker,
+    proxmox_virtual_environment_cluster_firewall_security_group.metrics_server,
+    proxmox_virtual_environment_cluster_firewall_security_group.cilium,
     proxmox_virtual_environment_cluster_firewall_security_group.nodeport,
   ]
   for_each = { for node in local.nodes : "${node.cluster_name}-${node.node_class}-${node.index}" => node if local.cluster_config.networking.use_pve_firewall }
@@ -534,6 +659,18 @@ resource "proxmox_virtual_environment_firewall_rules" "main" {
   rule {
     security_group = proxmox_virtual_environment_cluster_firewall_security_group.kubelet_api_worker[0].name
     comment        = proxmox_virtual_environment_cluster_firewall_security_group.kubelet_api_worker[0].name
+    iface          = "net0"
+  }
+
+  rule {
+    security_group = proxmox_virtual_environment_cluster_firewall_security_group.metrics_server[0].name
+    comment        = proxmox_virtual_environment_cluster_firewall_security_group.metrics_server[0].name
+    iface          = "net0"
+  }
+
+  rule {
+    security_group = proxmox_virtual_environment_cluster_firewall_security_group.cilium[0].name
+    comment        = proxmox_virtual_environment_cluster_firewall_security_group.cilium[0].name
     iface          = "net0"
   }
 

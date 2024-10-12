@@ -374,7 +374,7 @@ variable "clusters" {
           count      = 1
           cores      = 4
           sockets    = 2
-          memory     = 4096
+          memory     = 8192
           disks      = [
             { index = 0, datastore = "pve-block", size = 20, backup = true }
           ]
