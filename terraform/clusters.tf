@@ -18,6 +18,9 @@ variable "clusters" {
       ssh_key_type                   : string # type of key to scan and trust for remote hosts. the key of this type gets added to local ~/.ssh/known_hosts.
     })
     networking                       : object({
+      use_pve_firewall               : bool   # whether or not to create and enable firewall rules in proxmox to harden your cluster
+      management_ranges_ipv4         : string # proxmox list of the IPs, ranges, or cidrs that you want to be able to reach the K8s api and ssh into the hosts. Only used if use_pve_firewall is true. Use a dash for ranges and comma separation
+      management_ranges_ipv6         : string # proxmox list of the IPs, ranges, or cidrs that you want to be able to reach the K8s api and ssh into the hosts. Only used if use_pve_firewall is true. Use a dash for ranges and comma separation
       bridge                         : string # name of the proxmox bridge to use for VM's network interface
       dns_search_domain              : string # search domain for DNS resolution
       assign_vlan                    : bool   # whether or not to assign a vlan to the network interfaces of the VMs.
@@ -149,6 +152,9 @@ variable "clusters" {
         ssh_key_type                   = "ssh-ed25519"
       }
       networking                       = {
+        management_ranges_ipv4         = "10.0.0.1-10.0.0.3,10.0.60.2,10.0.50.5,10.0.50.6"
+        management_ranges_ipv6         = ""
+        use_pve_firewall               = true
         bridge                         = "vmbr0"
         dns_search_domain              = "lan"
         vlan_name                      = "ALPHA"
@@ -172,18 +178,18 @@ variable "clusters" {
           dns2                         = "2607:fa18::2"
         }
         kube_vip = {
-          kube_vip_version             = "0.8.3"
+          kube_vip_version             = "0.8.4"
           vip                          = "10.0.1.100"
           vip_hostname                 = "alpha-api-server"
           vip_interface                = "eth0"
           use_ipv6                     = false
         }
         cilium = {
-          cilium_version               = "1.16.1"
+          cilium_version               = "1.16.2"
         }
       }
       local_path_provisioner = {
-        local_path_provisioner_version = "0.0.29"
+        local_path_provisioner_version = "0.0.30"
       }
       metrics_server = {
         metrics_server_version         = "0.7.2"
@@ -269,6 +275,9 @@ variable "clusters" {
         ssh_key_type                   = "ssh-ed25519"
       }
       networking                       = {
+        use_pve_firewall               = true
+        management_ranges_ipv4         = "10.0.0.1-10.0.0.3,10.0.60.2,10.0.50.5,10.0.50.6"
+        management_ranges_ipv6         = "2607:fa18:47fd::2"
         bridge                         = "vmbr0"
         dns_search_domain              = "lan"
         assign_vlan                    = true
@@ -283,27 +292,27 @@ variable "clusters" {
           dns2                         = "10.0.2.4"
         }
         ipv6                           = {
-          enabled                      = false
-          dual_stack                   = false
-          subnet_prefix                = "[replace-me]:200"
-          pod_cidr                     = "[replace-me]:200:244::/80"
-          svc_cidr                     = "[replace-me]:200:96::/112"
+          enabled                      = true
+          dual_stack                   = true
+          subnet_prefix                = "2607:fa18:47fd:200"
+          pod_cidr                     = "2607:fa18:47fd:200:244::/80"
+          svc_cidr                     = "2607:fa18:47fd:200:96::/112"
           dns1                         = "2607:fa18::1" # cloudflare ipv6 dns
           dns2                         = "2607:fa18::2"
         }
         kube_vip = {
-          kube_vip_version             = "0.8.3"
-          vip                          = "10.0.2.100"
+          kube_vip_version             = "0.8.4"
+          vip                          = "2607:fa18:47fd:200::100" #"10.0.2.100"
           vip_hostname                 = "beta-api-server"
           vip_interface                = "eth0"
-          use_ipv6                     = false
+          use_ipv6                     = true
         }
         cilium = {
-          cilium_version                 = "1.16.1"
+          cilium_version                 = "1.16.2"
         }
       }
       local_path_provisioner = {
-        local_path_provisioner_version = "0.0.29"
+        local_path_provisioner_version = "0.0.30"
       }
       metrics_server = {
         metrics_server_version         = "0.7.2"
@@ -334,7 +343,7 @@ variable "clusters" {
           start_ip   = 120
         }
         storage = {
-          count      = 1
+          count      = 0
           cores      = 1
           sockets    = 2
           memory     = 2048
@@ -348,12 +357,12 @@ variable "clusters" {
           taints = {}
         }
         database = {
-          count      = 1
+          count      = 0
           cores      = 2
           sockets    = 2
           memory     = 8192
           disks      = [
-            { index = 0, datastore = "pve-block", size = 50, backup = true }
+            { index = 0, datastore = "pve-block", size = 20, backup = true }
           ]
           start_ip   = 140
           labels = {
@@ -389,6 +398,9 @@ variable "clusters" {
         ssh_key_type                   = "ssh-ed25519"
       }
       networking                       = {
+        use_pve_firewall               = true
+        management_ranges_ipv4         = "10.0.0.1-10.0.0.3,10.0.60.2,10.0.50.5,10.0.50.6"
+        management_ranges_ipv6         = ""
         bridge                         = "vmbr0"
         dns_search_domain              = "lan"
         assign_vlan                    = true
@@ -412,18 +424,18 @@ variable "clusters" {
           dns2                         = "2607:fa18::2"
         }
         kube_vip = {
-          kube_vip_version             = "0.8.3"
+          kube_vip_version             = "0.8.4"
           vip                          = "10.0.3.100"
           vip_hostname                 = "gamma-api-server"
           vip_interface                = "eth0"
           use_ipv6                     = false
         }
         cilium = {
-          cilium_version               = "1.16.1"
+          cilium_version               = "1.16.2"
         }
       }
       local_path_provisioner = {
-        local_path_provisioner_version = "0.0.29"
+        local_path_provisioner_version = "0.0.30"
       }
       metrics_server = {
         metrics_server_version         = "0.7.2"
