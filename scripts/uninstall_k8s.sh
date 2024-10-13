@@ -24,6 +24,8 @@ echo "Running ansible on cluster: $CLUSTER_NAME"
 
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+set -e
+trap 'echo "An error occurred. Cleaning up..."; cleanup_function' ERR
 pushd $SCRIPT_DIR || exit
 
 source .env

@@ -94,7 +94,7 @@ resource "proxmox_virtual_environment_vm" "node" {
   network_device {
     vlan_id  = each.value.vlan_id
     bridge   = each.value.bridge
-    firewall = local.cluster_config.networking.use_pve_firewall
+    firewall = true # we'll toggle the firewall at the node level so it can be toggled w/ terraform without restarting the node
   }
   reboot = false # reboot is performed during the ./install_k8s.sh script, but only when needed, and only on nodes not part of the cluster already.
   migrate = true
