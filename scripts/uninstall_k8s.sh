@@ -29,6 +29,7 @@ trap 'echo "An error occurred. Cleaning up..."; cleanup_function' ERR
 pushd $SCRIPT_DIR || exit
 
 source .env
+source k8s.env
 
 cd ../ansible || exit
 
