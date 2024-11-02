@@ -201,7 +201,7 @@ variable "clusters" {
           sockets    = 2
           memory     = 16384
           disks      = [
-            { index = 0, datastore = "pve-block", size = 100, backup = true }
+            { index = 0, datastore = "nvmes", size = 100, backup = true }
           ]
           start_ip   = 110
           labels = {
@@ -215,7 +215,7 @@ variable "clusters" {
           sockets    = 2
           memory     = 2048
           disks      = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true }
+            { index = 0, datastore = "nvmes", size = 20, backup = true }
           ]
           start_ip   = 120
         }
@@ -225,7 +225,7 @@ variable "clusters" {
           sockets    = 2
           memory     = 2048
           disks      = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true }
+            { index = 0, datastore = "nvmes", size = 20, backup = true }
           ]
           start_ip   = 130
           labels = {
@@ -239,7 +239,7 @@ variable "clusters" {
           sockets    = 2
           memory     = 8192
           disks      = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true }
+            { index = 0, datastore = "nvmes", size = 20, backup = true }
           ]
           start_ip   = 140
           labels = {
@@ -253,7 +253,7 @@ variable "clusters" {
           sockets    = 2
           memory     = 4096
           disks      = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true }
+            { index = 0, datastore = "nvmes", size = 20, backup = true }
           ]
           start_ip   = 150
           labels = {
@@ -324,7 +324,7 @@ variable "clusters" {
           sockets    = 2
           memory     = 4096
           disks      = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true }
+            { index = 0, datastore = "nvmes", size = 20, backup = true }
           ]
           start_ip   = 110
           labels = {
@@ -338,7 +338,7 @@ variable "clusters" {
           sockets    = 2
           memory     = 2048
           disks      = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true }
+            { index = 0, datastore = "nvmes", size = 20, backup = true }
           ]
           start_ip   = 120
         }
@@ -348,7 +348,7 @@ variable "clusters" {
           sockets    = 2
           memory     = 2048
           disks      = [
-            { index = 0, datastore = "pve-block", size = 100, backup = false }
+            { index = 0, datastore = "nvmes", size = 100, backup = false }
           ]
           start_ip   = 130
           labels = {
@@ -362,7 +362,7 @@ variable "clusters" {
           sockets    = 2
           memory     = 8192
           disks      = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true }
+            { index = 0, datastore = "nvmes", size = 20, backup = true }
           ]
           start_ip   = 140
           labels = {
@@ -376,7 +376,7 @@ variable "clusters" {
           sockets    = 2
           memory     = 8192
           disks      = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true }
+            { index = 0, datastore = "nvmes", size = 20, backup = true }
           ]
           start_ip   = 150
           labels = {
@@ -447,7 +447,7 @@ variable "clusters" {
           sockets  = 2
           memory   = 4096
           disks    = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true }
+            { index = 0, datastore = "nvmes", size = 20, backup = true }
           ]
           start_ip = 110
           labels   = {
@@ -461,7 +461,7 @@ variable "clusters" {
           sockets  = 2
           memory   = 2048
           disks    = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true }
+            { index = 0, datastore = "nvmes", size = 20, backup = true }
           ]
           start_ip = 120
         }
@@ -471,8 +471,8 @@ variable "clusters" {
           sockets  = 2
           memory   = 2048
           disks    = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true },
-            { index = 1, datastore = "pve-block", size = 100, backup = false }
+            { index = 0, datastore = "nvmes", size = 20, backup = true },
+            { index = 1, datastore = "nvmes", size = 100, backup = false }
           ]
           start_ip = 130
           labels   = {
@@ -486,7 +486,7 @@ variable "clusters" {
           sockets  = 2
           memory   = 8192
           disks    = [
-            { index = 0, datastore = "pve-block", size = 50, backup = true }
+            { index = 0, datastore = "nvmes", size = 50, backup = true }
           ]
           start_ip = 140
           labels   = {
@@ -500,7 +500,7 @@ variable "clusters" {
           sockets  = 2
           memory   = 4096
           disks    = [
-            { index = 0, datastore = "pve-block", size = 20, backup = true }
+            { index = 0, datastore = "nvmes", size = 20, backup = true }
           ]
           start_ip = 150
           labels   = {

@@ -21,9 +21,8 @@ resource "proxmox_virtual_environment_vm" "node" {
   cpu {
     cores    = each.value.cores
     sockets  = each.value.sockets
-    hotplugged = each.value.cores * each.value.sockets
     numa = true
-    type = "host"
+    type = "x86-64-v2-AES"
     flags = []
   }
   memory {
@@ -106,6 +105,7 @@ resource "proxmox_virtual_environment_vm" "node" {
       tags,
       description,
       clone,
+      operating_system,
       disk, # don't remake disks, could cause data loss! Can comment this out if no production data is present
     ]
   }

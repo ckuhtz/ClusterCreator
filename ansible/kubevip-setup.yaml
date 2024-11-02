@@ -20,9 +20,9 @@
             --address {{ cluster_config.networking.kube_vip.vip }} \
             --controlplane \
             --arp \
-            --leaseDuration 60 \
-            --leaseRenewDuration 30 \
-            --leaseRetry 5 \
+            --leaseDuration 30 \
+            --leaseRenewDuration 15 \
+            --leaseRetry 2 \
             --leaderElection > /tmp/kube-vip.yaml
 # add --services above to get kube-vip to publish load balancers for all services that are of type LoadBalancer
 # if you do this, you'll need to add ONE of the following to new LB services

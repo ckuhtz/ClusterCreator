@@ -40,8 +40,8 @@ virt-customize -a $PROXMOX_ISO_PATH/$IMAGE_NAME \
      # firstboot script creates /tmp/.firstboot when finished
 
 echo -e "${GREEN}Deleting the old template vm if it exists...${ENDCOLOR}"
-qm stop $TEMPLATE_VM_ID --skiplock 1 2&>/dev/null || true
-qm destroy $TEMPLATE_VM_ID --purge 1 --skiplock 1 --destroy-unreferenced-disks 1 2&>/dev/null || true
+qm stop $TEMPLATE_VM_ID --skiplock 1 2>/dev/null || true
+qm destroy $TEMPLATE_VM_ID --purge 1 --skiplock 1 --destroy-unreferenced-disks 1 2>/dev/null || true
 
 echo -e "${GREEN}Creating the VM...${ENDCOLOR}"
 qm create $TEMPLATE_VM_ID \
