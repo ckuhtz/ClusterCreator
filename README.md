@@ -1,4 +1,4 @@
-# ClusterCreator: Terraform & Ansible K8S Lifecycle Management on Proxmox
+# ClusterCreator: Terraform & Ansible K8s on Proxmox
 
 ![ClusterCreator Overview](https://github.com/user-attachments/assets/01cbdc3a-43e7-450b-8664-954bc8f0bcb7)
 
@@ -83,7 +83,7 @@ ClusterCreator requires access to the Proxmox cluster. Execute the following com
 pveum user add terraform@pve -comment "Terraform User"
 ```
 
-#### 2. Add a Custom Role for Terraform with Required Permissions:
+#### 2. Add a Custom Role for Tofu with Required Permissions:
 
 ```shell
 pveum role add TerraformRole -privs "Datastore.Allocate Datastore.AllocateSpace Datastore.AllocateTemplate Datastore.Audit Pool.Allocate Pool.Audit Sys.Audit Sys.Console Sys.Modify SDN.Use VM.Allocate VM.Audit VM.Clone VM.Config.CDROM VM.Config.Cloudinit VM.Config.CPU VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Migrate VM.Monitor VM.PowerMgmt User.Modify Mapping.Use"
@@ -129,7 +129,7 @@ As a shortcut for cluster management using this tool, you should link the `clust
 
 You can enable the Unifi provider to enable your Unifi controller to make dedicated VLANs for your cluster, allowing you to achieve network isolation if desired.
 
-You can enable the Minio provider to store your terraform/tofu state in S3 instead of your local computer. This is recommended for your production clusters.
+You can enable the Minio provider to store your tofu/terraform state in S3 instead of your local computer. This is recommended for your production clusters.
 
 Use the new `ccr` command to enable the provider of your choice.
 
@@ -158,6 +158,12 @@ Customize the following configuration files to suit your environment:
 - `scripts/k8s.env`: Specify Kubernetes versions and template VM configurations.
 - `terraform/variables.tf`: Define non-sensitive variables for Tofu.
 - `terraform/clusters.tf`: Configure cluster specifications. Update the username to your own.
+
+**NOTE: Make sure you understand the cluster object definined at the top of `terraform/clusters.tf`. It has many options with set defaults, and many features like the PVE firewall, HA, boot on PVE startup, which are all **disabled by default**.
+
+---
+
+![ClusterCreator Commands](https://github.com/user-attachments/assets/8c2cde1d-2f9b-4573-83cd-e0f5ca0c8cbb)
 
 ---
 
@@ -333,7 +339,33 @@ Configure IPv4 and IPv6 support:
 
 ### Custom Worker Types
 
-Define custom worker classes in `clusters.tf` to meet specific workload requirements:
+Define custom worker classes in `clusters.tf` under the `node_classes` section of any cluster, like this.
+
+```tf
+        ...
+        gpu = {
+          count      = 2
+          pve_nodes  = [ "Acropolis", "Parthenon" ]
+          cpu_type   = "host"
+          disks      = [
+            { datastore = "local-btrfs", size = 20 }
+          ]
+          start_ip   = 190
+          labels = [
+            "nodeclass=gpu"
+          ]
+          taints  = [
+            "gpu=true:NoSchedule"
+          ]
+          devices = [
+            { mapping = "my-full-gpu-passthrough" }
+          ]
+        }
+        ...
+```
+This specific example shows how to add a `gpu` class with full gpu passthrough.
+
+Custom worker classes would be done to meet specific workload requirements like:
 
 - **GPU Workers**:
 
@@ -353,6 +385,7 @@ Define custom worker classes in `clusters.tf` to meet specific workload requirem
   - **Configuration**: Taints to restrict workloads to government containers.
 
 - **Backup Workers**:
+
   - **Configuration**: Reduced CPU and memory, expanded disks, taints for backup storage.
 
 ---
@@ -366,13 +399,13 @@ Define custom worker classes in `clusters.tf` to meet specific workload requirem
 - **Proxmox Clone Failures**: Proxmox may struggle with cloning identical templates repeatedly. \
   **Solution**:
 
-  - Retry `tofu apply` multiple times with larger cluster sizes.
+  - Retry `ccr tofu apply` multiple times with larger cluster sizes.
   - Add nodes in smaller batches to distribute across the Proxmox cluster.
 
 - **Configuration Conflicts**: Errors related to existing configurations or unresponsive VMs. \
   **Solution**:
   - Ensure no conflicting resources exist before applying.
-  - Use `./uninstall_k8s.sh` to reset VMs if necessary.
+  - Use `ccr reset-all-nodes` to reset VMs if necessary.
 
 **Workaround**: For persistent issues, create brand-new VMs to ensure a clean environment.
 
