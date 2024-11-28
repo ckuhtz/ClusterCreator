@@ -159,7 +159,7 @@ Customize the following configuration files to suit your environment:
 - `terraform/variables.tf`: Define non-sensitive variables for Tofu.
 - `terraform/clusters.tf`: Configure cluster specifications. Update the username to your own.
 
-**NOTE: Make sure you understand the cluster object definined at the top of `terraform/clusters.tf`. It has many options with set defaults, and many features like the PVE firewall, HA, boot on PVE startup, which are all **disabled by default**.
+**NOTE: Make sure you understand the cluster object definined at the top of `terraform/clusters.tf`. It has many options with set defaults, and many features like the PVE firewall, HA, boot on PVE startup, which are all *disabled by default***.
 
 ---
 
