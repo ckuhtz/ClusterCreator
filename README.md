@@ -365,6 +365,8 @@ Define custom worker classes in `clusters.tf` under the `node_classes` section o
 ```
 This specific example shows how to add a `gpu` class with full gpu passthrough.
 
+[Here's a good guide](https://3os.org/infrastructure/proxmox/gpu-passthrough/gpu-passthrough-to-vm/) for setting up GPU pass-through on your PVE hosts. You'll want to make a datacenter resource mapping as well.
+
 Custom worker classes would be done to meet specific workload requirements like:
 
 - **GPU Workers**:
